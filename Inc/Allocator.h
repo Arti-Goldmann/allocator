@@ -1,7 +1,7 @@
 #pragma once
 #include <iostream>
 
-#define DEBUG_ALLOCATOR
+//#define DEBUG_ALLOCATOR
 
 #define ALLOCATOR_MEM_ADRESSING_64_BIT
 //#define ALLOCATOR_MEM_ADRESSING_32_BIT
@@ -34,7 +34,14 @@ public:
 
 	void* m_malloc(size_t);
 	void  m_free(void*);
-	void print_heap();
+	
+	size_t  get_free_bytes();            //Кол-во свободных байт для выделению пользователю
+	size_t  get_total_free_bytes();      //Всего свободных байт (с учетом списка для информации)
+	size_t  get_bytes_in_use();          //Кол-во занятых байт выделенных пользователю
+	size_t  get_total_bytes_in_use();    //Всего занятых байт (с учетом списка для информации)
+	size_t  get_number_of_free_chunks(); //Кол-во свободных разделенных ячеек памяти
+	size_t  get_total_heapSize();        //Всего размер кучи
+
 private:
 
 	static uint8_t MyHeap[config::SIZE_OF_HEAP_BYTES];
@@ -44,10 +51,13 @@ private:
 	uint8_t* left_alligned_adress;
 	uint8_t* right_alligned_adress;
 
-	size_t total_heap_size;	
+	size_t total_heap_size;
+	size_t total_bytes_in_use = {0};
+	size_t user_bytes_in_use = {0};			
 	void add_new_free_chunk_to_list(ChunkNodeInfo_t*);
 	void init();
 
+	void print_heap();
 	void print_init_info();
 	void print_free_list();
 	void print_m_malloc_info(size_t, size_t);

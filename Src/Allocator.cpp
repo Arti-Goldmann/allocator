@@ -71,6 +71,9 @@ void* Allocator::m_malloc(size_t bytes_to_alloc) {
 		add_new_free_chunk_to_list(new_free_chunk);
 	}
 
+	total_bytes_in_use += bytes_to_alloc;
+	user_bytes_in_use  += bytes_to_alloc - sizeof(ChunkNodeInfo_t);
+
 	xTaskResumeAll();
 	return alloc_adress;
 }
@@ -83,9 +86,13 @@ void Allocator::m_free(void* adress_to_free) {
 	
 	//Должны сместиться влево на размер структуры с информацией
 	ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*) ((size_t)adress_to_free - sizeof(ChunkNodeInfo_t));
+	total_bytes_in_use -= new_free_chunk->freeSize;
+	user_bytes_in_use  -= new_free_chunk->freeSize - sizeof(ChunkNodeInfo_t);
+
 	vTaskSuspendAll();
 	add_new_free_chunk_to_list(new_free_chunk);
 	xTaskResumeAll();
+
 #ifdef DEBUG_ALLOCATOR
 	print_m_free_info((size_t)adress_to_free);
 #endif
@@ -162,6 +169,7 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 		std::cout << " new chunk is the next for prev->" << std::endl;
 #endif
 	}
+
 #ifdef DEBUG_ALLOCATOR
 	print_free_list();
 #endif
@@ -204,6 +212,58 @@ void Allocator::init() {
 #endif
 }
 
+size_t Allocator::get_free_bytes(){
+	//Вернем кол-во байтов свободных для пользователя
+	//c учетом того, что место еще требуется под связанный список с информацией
+	ChunkNodeInfo_t* node = start_edge.next;
+	size_t free_bytes_to_alloc = 0;
+	while (node != &end_edge) {
+		free_bytes_to_alloc += node->freeSize - sizeof(ChunkNodeInfo_t);
+		node = node->next;
+	}
+
+	return free_bytes_to_alloc;
+}
+size_t Allocator::get_total_free_bytes(){
+	//Вернем общее кол-во свободных байт
+	ChunkNodeInfo_t* node = start_edge.next;
+	size_t free_bytes_to_alloc = 0;
+	while (node != &end_edge) {
+		free_bytes_to_alloc += node->freeSize;
+		node = node->next;
+	}
+
+	return free_bytes_to_alloc;
+
+}
+
+size_t Allocator::get_number_of_free_chunks(){
+	//Вернем общее кол-во свободных раздельных ячеек
+	ChunkNodeInfo_t* node = start_edge.next;
+	size_t free_chunks_counter = 0;
+	while (node != &end_edge) {
+		free_chunks_counter++;
+		node = node->next;
+	
+	}
+
+	return free_chunks_counter;
+}
+
+size_t Allocator::get_bytes_in_use(){
+	return user_bytes_in_use;
+}
+
+size_t Allocator::get_total_bytes_in_use(){
+	return total_bytes_in_use;
+}
+
+size_t Allocator::get_total_heapSize(){
+	return total_heap_size;
+}
+
+
+//Функции для отладки
 void Allocator::print_init_info() {
 
 	std::cout << "\n***Init info***\n" << std::endl;
@@ -221,7 +281,7 @@ void Allocator::print_free_list() {
 	ChunkNodeInfo_t* node = start_edge.next;
 	std::cout << " free list->\n" << std::endl;
 	while (node != &end_edge) {
-		std::cout << " start adress of new free chunk: " << std::hex << (size_t)node << std::endl;
+		std::cout << " start adress of free chunk: " << std::hex << (size_t)node << std::endl;
 		std::cout << " free size of chunk: " << std::dec << (size_t)node->freeSize << std::endl;
 		node = node->next;
 	}

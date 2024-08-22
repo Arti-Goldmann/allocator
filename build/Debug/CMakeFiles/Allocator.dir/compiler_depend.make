@@ -111,6 +111,7 @@ CMakeFiles/Allocator.dir/Src/Allocator.cpp.obj: C:/FILES/MyDoc/Documents/GitRep/
 CMakeFiles/Allocator.dir/Src/main.cpp.obj: C:/FILES/MyDoc/Documents/GitRep/MyRep/software/PC/Allocator/Src/main.cpp \
   C:/FILES/MyDoc/Documents/GitRep/MyRep/software/PC/Allocator/Inc/Allocator.h \
   C:/MinGW/include/_mingw.h \
+  C:/MinGW/include/assert.h \
   C:/MinGW/include/ctype.h \
   C:/MinGW/include/direct.h \
   C:/MinGW/include/errno.h \
@@ -163,14 +164,20 @@ CMakeFiles/Allocator.dir/Src/main.cpp.obj: C:/FILES/MyDoc/Documents/GitRep/MyRep
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/ptr_traits.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/range_access.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_algobase.h \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_bvector.h \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_construct.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_function.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_iterator.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_iterator_base_funcs.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_iterator_base_types.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_pair.h \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_uninitialized.h \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_vector.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/streambuf.tcc \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/streambuf_iterator.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stringfwd.h \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/vector.tcc \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cassert \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cctype \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cerrno \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/clocale \
@@ -211,6 +218,7 @@ CMakeFiles/Allocator.dir/Src/main.cpp.obj: C:/FILES/MyDoc/Documents/GitRep/MyRep
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/string \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/system_error \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/type_traits \
+  C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/vector \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/stdarg.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/stddef.h \
   C:/MinGW/lib/gcc/mingw32/6.3.0/include/stdint.h
@@ -243,6 +251,8 @@ C:/MinGW/include/wctype.h:
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32/bits/cpu_defines.h:
 
 C:/MinGW/include/errno.h:
+
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_construct.h:
 
 C:/MinGW/include/io.h:
 
@@ -338,6 +348,8 @@ C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/locale_classes.h:
 
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/move.h:
 
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/vector.tcc:
+
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/locale_facets.tcc:
 
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/locale_facets.h:
@@ -406,6 +418,8 @@ C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32/bits/error_constants.h:
 
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32/bits/gthr-default.h:
 
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_uninitialized.h:
+
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/stdint.h:
 
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/mingw32/bits/gthr.h:
@@ -427,3 +441,13 @@ C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/system_error:
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/type_traits:
 
 C:/MinGW/lib/gcc/mingw32/6.3.0/include/stddef.h:
+
+C:/MinGW/include/assert.h:
+
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_bvector.h:
+
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/bits/stl_vector.h:
+
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/cassert:
+
+C:/MinGW/lib/gcc/mingw32/6.3.0/include/c++/vector:
