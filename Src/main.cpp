@@ -20,7 +20,7 @@ int main() {
 
 	std::cout << "----------TEST 1----------" << std::endl;
 
-	//Âûäåëÿåì 3 è ñìîòğèì êàê âñòàâèòñÿ ñğåäíèé
+	//Ğ’Ñ‹Ğ´ĞµĞ»ÑĞµĞ¼ 3 Ğ¸ ÑĞ¼Ğ¾Ñ‚Ñ€Ğ¸Ğ¼ ĞºĞ°Ğº Ğ²ÑÑ‚Ğ°Ğ²Ğ¸Ñ‚ÑÑ ÑÑ€ĞµĞ´Ğ½Ğ¸Ğ¹
 	Allocator allocator = Allocator();
 	std::cout << "---------ptr1 malloc" << std::endl;
 	ptr1 = (char*)allocator.m_malloc(2 * sizeof(char));
@@ -37,7 +37,7 @@ int main() {
 
 	std::cout << "----------TEST 2----------" << std::endl;
 
-	//Âûäåëÿåì 2
+	//Ğ’Ñ‹Ğ´ĞµĞ»ÑĞµĞ¼ 2
 	std::cout << "---------ptr1 malloc" << std::endl;
 	ptr1 = (char*)allocator.m_malloc(2 * sizeof(char));
 	std::cout << "---------ptr2 malloc" << std::endl;
@@ -49,7 +49,7 @@ int main() {
 
 	std::cout << "----------TEST 3----------" << std::endl;
 
-	//Âûäåëÿåì 2
+	//Ğ’Ñ‹Ğ´ĞµĞ»ÑĞµĞ¼ 2
 	std::cout << "---------ptr1 malloc" << std::endl;
 	ptr1 = (char*)allocator.m_malloc(2 * sizeof(char));
 	std::cout << "---------ptr2 malloc" << std::endl;
