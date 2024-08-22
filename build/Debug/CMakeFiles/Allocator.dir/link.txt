@@ -1,0 +1,3 @@
+C:\Users\zolot\scoop\apps\cmake\3.29.3\bin\cmake.exe -E rm -f CMakeFiles\Allocator.dir/objects.a
+C:\MinGW\bin\ar.exe qc CMakeFiles\Allocator.dir/objects.a @CMakeFiles\Allocator.dir\objects1.rsp
+C:\MinGW\bin\c++.exe -g -Wl,--whole-archive CMakeFiles\Allocator.dir/objects.a -Wl,--no-whole-archive -o Allocator.exe -Wl,--out-implib,libAllocator.dll.a -Wl,--major-image-version,0,--minor-image-version,0 @CMakeFiles\Allocator.dir\linkLibs.rsp
