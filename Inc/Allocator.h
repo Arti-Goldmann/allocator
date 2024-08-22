@@ -3,8 +3,8 @@
 
 //#define DEBUG_ALLOCATOR
 
-#define ALLOCATOR_MEM_ADRESSING_64_BIT
-//#define ALLOCATOR_MEM_ADRESSING_32_BIT
+#define ALLOCATOR_MEM_ADRESSING_64_BIT		//win64
+//#define ALLOCATOR_MEM_ADRESSING_32_BIT	//stm32
 
 class Allocator {
 public:
@@ -57,6 +57,7 @@ private:
 	void add_new_free_chunk_to_list(ChunkNodeInfo_t*);
 	void init();
 
+	//Функции для отладки
 	void print_heap();
 	void print_init_info();
 	void print_free_list();

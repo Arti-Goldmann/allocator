@@ -86,6 +86,7 @@ void Allocator::m_free(void* adress_to_free) {
 	
 	//Должны сместиться влево на размер структуры с информацией
 	ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*) ((size_t)adress_to_free - sizeof(ChunkNodeInfo_t));
+	
 	total_bytes_in_use -= new_free_chunk->freeSize;
 	user_bytes_in_use  -= new_free_chunk->freeSize - sizeof(ChunkNodeInfo_t);
 

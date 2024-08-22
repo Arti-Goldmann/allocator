@@ -190,7 +190,6 @@ void Test5(){
 	//А теперь будем совобождать через один сначала
 	size_t index = 0;
 	while(index < size_alloc){
-		std::cout << "index " << index << std::endl;
 		allocator.m_free(allocated[index]);
 		index += 2;
 		alloc_counter--;
@@ -201,8 +200,7 @@ void Test5(){
 
 	//А теперь через 1 со смещением 1
 	index = 1;
-	while(index < alloc_counter){
-		std::cout << "index " << index << std::endl;
+	while(index < size_alloc){
 		allocator.m_free(allocated[index]);
 		index += 2;
 		alloc_counter--;
