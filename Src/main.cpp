@@ -112,6 +112,7 @@ void Test3(){
 		size_t alloc_bytes_expected = alloc_counter * ChunkInfo * 2;
 		assert(alloc_bytes_expected == allocator.get_total_bytes_in_use());
 		assert((allocator.get_total_heapSize() - alloc_bytes_expected) == allocator.get_total_free_bytes());
+		assert(allocator.get_number_of_free_chunks() == 1); //Свободное место должно объединяться
 	}
 
 	//Вся память должна быть освобождена
@@ -154,6 +155,7 @@ void Test4(){
 		size_t alloc_bytes_expected = alloc_counter * ChunkInfo * 2;
 		assert(alloc_bytes_expected == allocator.get_total_bytes_in_use());
 		assert((allocator.get_total_heapSize() - alloc_bytes_expected) == allocator.get_total_free_bytes());
+		assert(allocator.get_number_of_free_chunks() == 1); //Свободное место должно объединяться
 	}
 
 	//Вся память должна быть освобождена
