@@ -14,11 +14,6 @@ Allocator::Allocator() {
 
 void* Allocator::m_malloc(size_t bytes_to_alloc) {
 
-#ifdef DEBUG_ALLOCATOR
-	std::cout << "\n***M_MALLOC***\n" << std::endl;
-	std::cout << "required bytes to allocate: " << bytes_to_alloc << std::endl;
-#endif
-
 	void* alloc_adress = NULL;
 	if (!bytes_to_alloc) return NULL;
 
@@ -41,9 +36,6 @@ void* Allocator::m_malloc(size_t bytes_to_alloc) {
 	}
 	if (cur_node == &end_edge) {
 		//Нет такого большого блока
-#ifdef DEBUG_ALLOCATOR
-		std::cout << "\n***ERROR_CAN'T_ALLOC***\n" << std::endl;
-#endif
 		xTaskResumeAll();
 		return NULL;
 	}
@@ -54,10 +46,6 @@ void* Allocator::m_malloc(size_t bytes_to_alloc) {
 	//Удаляем этот блок из списка свободных блоков
 	prev_node->next = cur_node->next;
 	cur_node->next = NULL;
-
-#ifdef DEBUG_ALLOCATOR
-	print_m_malloc_info((size_t)alloc_adress, bytes_to_alloc);
-#endif
 
 	//Проверяем можно ли лишнюю память выделенного блока добавить в список свободных блоков памяти.
 	//Если осталось больше минимально возможного блока ( sizeof(ChunkNodeInfo_t) x 2: место под информацию и под выделяемую память), 
@@ -79,31 +67,19 @@ void* Allocator::m_malloc(size_t bytes_to_alloc) {
 }
 
 void Allocator::m_free(void* adress_to_free) {
-
-#ifdef DEBUG_ALLOCATOR
-	std::cout << "\n***M_FREE***\n" << std::endl;
-#endif
 	
+	vTaskSuspendAll();
 	//Должны сместиться влево на размер структуры с информацией
 	ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*) ((size_t)adress_to_free - sizeof(ChunkNodeInfo_t));
 	
 	total_bytes_in_use -= new_free_chunk->freeSize;
 	user_bytes_in_use  -= new_free_chunk->freeSize - sizeof(ChunkNodeInfo_t);
 
-	vTaskSuspendAll();
 	add_new_free_chunk_to_list(new_free_chunk);
 	xTaskResumeAll();
-
-#ifdef DEBUG_ALLOCATOR
-	print_m_free_info((size_t)adress_to_free);
-#endif
 }
 
 void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
-
-#ifdef DEBUG_ALLOCATOR
-	std::cout << " add_new_free_chunk_to_list->" << std::endl;
-#endif
 
 	//Ищем элементы списка, чей адрес будет левее и правее нового свободного блока
 	ChunkNodeInfo_t* prev_node =  &start_edge;
@@ -113,11 +89,6 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 	if (cur_node == &end_edge) {
 		start_edge.next = new_node;
 		new_node->next = &end_edge;
-
-#ifdef DEBUG_ALLOCATOR
-		std::cout << " first free chunk->" << std::endl;
-		print_free_list();
-#endif
 		return;
 	}
 
@@ -134,10 +105,6 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 		new_node = prev_node;
 		new_node->freeSize += addFreeSize;
 		prev_and_new_link = true;
-
-#ifdef DEBUG_ALLOCATOR
-		std::cout << " left and new chunk link->" << std::endl;
-#endif
 	}
 
 	bool new_and_cur_link = false;
@@ -149,10 +116,6 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 			new_node->freeSize += cur_node->freeSize;
 			new_node->next = cur_node->next;
 			new_and_cur_link = true;
-
-#ifdef DEBUG_ALLOCATOR
-			std::cout << " new chunk and right link->" << std::endl;
-#endif
 		}
 	}
 	
@@ -165,15 +128,7 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 			new_node->next = prev_node->next;
 		
 		prev_node->next = new_node;
-
-#ifdef DEBUG_ALLOCATOR
-		std::cout << " new chunk is the next for prev->" << std::endl;
-#endif
 	}
-
-#ifdef DEBUG_ALLOCATOR
-	print_free_list();
-#endif
 
 }
 
@@ -205,12 +160,6 @@ void Allocator::init() {
 	first_free_chunk->next = &end_edge;
 	first_free_chunk->freeSize = total_heap_size;
 	start_edge.next = first_free_chunk;
-
-#ifdef DEBUG_ALLOCATOR
-	print_init_info();
-	print_heap();
-	print_free_list();
-#endif
 }
 
 size_t Allocator::get_free_bytes(){
@@ -235,7 +184,6 @@ size_t Allocator::get_total_free_bytes(){
 	}
 
 	return free_bytes_to_alloc;
-
 }
 
 size_t Allocator::get_number_of_free_chunks(){
