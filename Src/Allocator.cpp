@@ -1,5 +1,4 @@
-#include "Allocator.h"
-#include <iostream>
+#include "main.h"
 
 uint8_t Allocator::MyHeap[TOTAL_CHUNK_BYTES * config::SIZE_OF_HEAP_CHUNKS];
 Allocator::ChunkNodeInfo_t Allocator::start_edge;
