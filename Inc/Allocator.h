@@ -9,8 +9,8 @@
 class Allocator {
 public:
 	struct config {
-		static constexpr size_t SIZE_OF_HEAP_CHUNKS = 200; //Сколько блоков в куче
-		static constexpr size_t SIZE_OF_CHUNK_BYTES = 16;  //Размер блока в байтах
+		static constexpr size_t SIZE_OF_HEAP_CHUNKS = 200;  //Сколько блоков в куче
+		static constexpr size_t SIZE_OF_CHUNK_BYTES = 16;   //Размер блока в байтах
 	};
 	
 	typedef struct S_ChunkNodeInfo {
