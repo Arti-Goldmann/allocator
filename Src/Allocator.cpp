@@ -1,7 +1,7 @@
 #include "Allocator.h"
 #include <iostream>
 
-uint8_t Allocator::MyHeap[config::SIZE_OF_HEAP_BYTES];
+uint8_t Allocator::MyHeap[TOTAL_CHUNK_BYTES * config::SIZE_OF_HEAP_CHUNKS];
 Allocator::ChunkNodeInfo_t Allocator::start_edge;
 Allocator::ChunkNodeInfo_t Allocator::end_edge;
 
@@ -12,55 +12,42 @@ Allocator::Allocator() {
 	init();
 }
 
-void* Allocator::m_malloc(size_t bytes_to_alloc) {
+void* Allocator::m_alloc_chunk() {
 
 	void* alloc_adress = NULL;
-	if (!bytes_to_alloc) return NULL;
 
 	vTaskSuspendAll();
-	//Добавляем к выделяемой памяти место под объект связанного списка с информацией
-	bytes_to_alloc += sizeof(ChunkNodeInfo_t);
-	//Все блоки в памяти должны состоять из одинаковых ячеек размера sizeof(ChunkNodeInfo_t)
-	//Дорастим выделяемый блок, если нужно, чтобы он был размером N * sizeof(ChunkNodeInfo_t)
-	if ((bytes_to_alloc & config::ALIGMENT_MASK) != 0) {
-		bytes_to_alloc += config::ALIGMENT;
-		bytes_to_alloc &= ~config::ALIGMENT_MASK;
-	}
 
-	//Проходим по связанному списку с информацией о блоках, чтобы найти свободный необходимого размера
+	//Будем выделять из первого же свободного блока
 	ChunkNodeInfo_t* prev_node = &start_edge;
-	ChunkNodeInfo_t* cur_node = start_edge.next;
-	while ((cur_node->freeSize < bytes_to_alloc) && (cur_node != &end_edge)) {
-		prev_node = cur_node;
-		cur_node = cur_node->next;
-	}
+	ChunkNodeInfo_t* cur_node =  start_edge.next;
+
 	if (cur_node == &end_edge) {
-		//Нет такого большого блока
+		//Уже нечего выделять
 		xTaskResumeAll();
 		return NULL;
 	}
 
 	//Передаем адрес памяти "перепрыгивая" структуру с информацией
-	alloc_adress = (void*)((size_t)cur_node + sizeof(ChunkNodeInfo_t));
+	alloc_adress = (void*)((size_t)cur_node + CHUNK_INFO_BYTES);
 
 	//Удаляем этот блок из списка свободных блоков
 	prev_node->next = cur_node->next;
 	cur_node->next = NULL;
 
-	//Проверяем можно ли лишнюю память выделенного блока добавить в список свободных блоков памяти.
-	//Если осталось больше минимально возможного блока ( sizeof(ChunkNodeInfo_t) x 2: место под информацию и под выделяемую память), 
-	//то тогда разделим и добавим лишнее в список
-	//<!Здесь нужно подумать: строго больше или больше либо равно
-	if ((cur_node->freeSize - bytes_to_alloc) >= (sizeof(ChunkNodeInfo_t) << 1)) {
-		ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*)((size_t)cur_node + bytes_to_alloc);
-		new_free_chunk->freeSize = cur_node->freeSize - bytes_to_alloc;
-		//Сохраним сколько байт мы выделили для этого блока 
-		cur_node->freeSize = bytes_to_alloc;
+	//Проверяем можно ли лишнюю память, которая осталась добавить в список свободных блоков памяти.
+	//Если в этой непрерывной области памяти находится больше одного блока, то ее можно разделить.
+	if (cur_node->free_chunks > 1) {
+		//Перепрыгиваем через структуру с информацией и через размер блока и получаем адрес нового блока
+		ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*)((size_t)cur_node + TOTAL_CHUNK_BYTES);
+
+		new_free_chunk->free_chunks = cur_node->free_chunks - 1;
+		cur_node->free_chunks = 1;
 		add_new_free_chunk_to_list(new_free_chunk);
 	}
 
-	total_bytes_in_use += bytes_to_alloc;
-	user_bytes_in_use  += bytes_to_alloc - sizeof(ChunkNodeInfo_t);
+	chunks_in_use++;
+	free_chunks--;
 
 	xTaskResumeAll();
 	return alloc_adress;
@@ -70,10 +57,10 @@ void Allocator::m_free(void* adress_to_free) {
 	
 	vTaskSuspendAll();
 	//Должны сместиться влево на размер структуры с информацией
-	ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*) ((size_t)adress_to_free - sizeof(ChunkNodeInfo_t));
+	ChunkNodeInfo_t* new_free_chunk = (ChunkNodeInfo_t*) ((size_t)adress_to_free - CHUNK_INFO_BYTES);
 	
-	total_bytes_in_use -= new_free_chunk->freeSize;
-	user_bytes_in_use  -= new_free_chunk->freeSize - sizeof(ChunkNodeInfo_t);
+	chunks_in_use--;
+	free_chunks++;
 
 	add_new_free_chunk_to_list(new_free_chunk);
 	xTaskResumeAll();
@@ -100,20 +87,20 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 	bool prev_and_new_link = false;
 	//Проверяем является ли новый блок непрерывным с левым и можно ли их объеднить
 	//Если да, то адрес левого блока плюс его размер должен совпасть с адресом нового блока
-	if ( ((size_t)prev_node + (size_t)prev_node->freeSize) == (size_t)new_node ) {
-		size_t addFreeSize = new_node->freeSize;
+	if ( ((size_t)prev_node + prev_node->free_chunks * TOTAL_CHUNK_BYTES) == (size_t)new_node ) {
+		size_t add_free_chunks = new_node->free_chunks;
 		new_node = prev_node;
-		new_node->freeSize += addFreeSize;
+		new_node->free_chunks += add_free_chunks;
 		prev_and_new_link = true;
 	}
 
 	bool new_and_cur_link = false;
 	//Проверяем является ли новый блок непрерывным с правым блоком и можно ли их объеднить
     //Если да, то адрес нового блока плюс его размер должен совпасть с адресом правого блока
-	if (((size_t)new_node + (size_t)new_node->freeSize) == (size_t)cur_node) {
+	if (((size_t)new_node + new_node->free_chunks * TOTAL_CHUNK_BYTES) == (size_t)cur_node) {
 		//Но только если правый блок не конец массива. Тогда мы просто уперлись в ограничение справа
 		if (cur_node != &end_edge) {
-			new_node->freeSize += cur_node->freeSize;
+			new_node->free_chunks += cur_node->free_chunks;
 			new_node->next = cur_node->next;
 			new_and_cur_link = true;
 		}
@@ -134,59 +121,37 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 
 void Allocator::init() {
 
-	total_heap_size = config::SIZE_OF_HEAP_BYTES;
+	total_heap_size = TOTAL_CHUNK_BYTES * config::SIZE_OF_HEAP_CHUNKS;
 
-	//Нужно выровнять расположение ячеек в памяти,
-	//чтобы все блоки в памяти были кратны sizeof(ChunkNodeInfo_t) - стркутуре с информацией о памяти
-
-	//Настраиваем левую границу
-	size_t temp_adress = (size_t) &MyHeap[0];
-
-	if ((temp_adress & config::ALIGMENT_MASK) != 0)
-	{
-		temp_adress += (config::ALIGMENT - 1);
-	    temp_adress &= ~config::ALIGMENT_MASK;
-		total_heap_size -= (temp_adress - (size_t)&MyHeap[0]);
-	}
-	left_alligned_adress = (uint8_t*)temp_adress;
-
-	//Настраиваем правую границу
-	temp_adress = (size_t)(left_alligned_adress + total_heap_size);
-	right_alligned_adress = (uint8_t*)(temp_adress & ~config::ALIGMENT_MASK);
-	total_heap_size = right_alligned_adress - left_alligned_adress;
-
-	//Создем первый элемент связанного списка, его расположение будет непосредственно в MyHeap в самом начале с учетом смещения 
-	ChunkNodeInfo_t* first_free_chunk = (ChunkNodeInfo_t*)left_alligned_adress;
+	//Создем первый элемент связанного списка, его расположение будет непосредственно в начале MyHeap
+	ChunkNodeInfo_t* first_free_chunk = (ChunkNodeInfo_t*) &MyHeap[0];
 	first_free_chunk->next = &end_edge;
-	first_free_chunk->freeSize = total_heap_size;
+	first_free_chunk->free_chunks = config::SIZE_OF_HEAP_CHUNKS;
 	start_edge.next = first_free_chunk;
+
+	free_chunks = first_free_chunk->free_chunks;
 }
 
-size_t Allocator::get_free_bytes(){
-	//Вернем кол-во байтов свободных для пользователя
-	//c учетом того, что место еще требуется под связанный список с информацией
+size_t  Allocator::get_free_chunks_num(){
+	//Могли бы просто вернуть free_chunks, которые и так записываются,
+	//но для проверки пройдемся по связанному списку
+	//и посчитаем сколько свободного места
+	size_t free_chunks_sum = 0;
 	ChunkNodeInfo_t* node = start_edge.next;
-	size_t free_bytes_to_alloc = 0;
 	while (node != &end_edge) {
-		free_bytes_to_alloc += node->freeSize - sizeof(ChunkNodeInfo_t);
+		free_chunks_sum += node->free_chunks;
 		node = node->next;
+	
 	}
-
-	return free_bytes_to_alloc;
-}
-size_t Allocator::get_total_free_bytes(){
-	//Вернем общее кол-во свободных байт
-	ChunkNodeInfo_t* node = start_edge.next;
-	size_t free_bytes_to_alloc = 0;
-	while (node != &end_edge) {
-		free_bytes_to_alloc += node->freeSize;
-		node = node->next;
-	}
-
-	return free_bytes_to_alloc;
-}
-
-size_t Allocator::get_number_of_free_chunks(){
+	return free_chunks_sum;
+}       
+size_t  Allocator::get_chunks_num_in_use(){
+	return chunks_in_use;
+}    
+size_t  Allocator::get_total_heap_size(){
+	return total_heap_size;
+}     
+size_t  Allocator::get_size_of_free_list(){
 	//Вернем общее кол-во свободных раздельных ячеек
 	ChunkNodeInfo_t* node = start_edge.next;
 	size_t free_chunks_counter = 0;
@@ -195,21 +160,11 @@ size_t Allocator::get_number_of_free_chunks(){
 		node = node->next;
 	
 	}
-
 	return free_chunks_counter;
 }
-
-size_t Allocator::get_bytes_in_use(){
-	return user_bytes_in_use;
-}
-
-size_t Allocator::get_total_bytes_in_use(){
-	return total_bytes_in_use;
-}
-
-size_t Allocator::get_total_heapSize(){
-	return total_heap_size;
-}
+size_t Allocator::get_heap_start_adress(){
+	return (size_t)&MyHeap[0];
+}     
 
 
 //Функции для отладки
@@ -218,9 +173,7 @@ void Allocator::print_init_info() {
 	std::cout << "\n***Init info***\n" << std::endl;
 
 	std::cout << "&MyHeap[0]: " << std::hex << (size_t)&MyHeap[0] << std::endl;
-	std::cout << "&MyHeap[config::SIZE_OF_HEAP_BYTES - 1]: " << std::hex << (size_t)&MyHeap[config::SIZE_OF_HEAP_BYTES - 1] << std::endl;
-	std::cout << "left_alligned_adress: " << std::hex << (size_t)left_alligned_adress << std::endl;
-	std::cout << "right_alligned_adress: " << std::hex << (size_t)right_alligned_adress << std::endl;
+	std::cout << "&MyHeap[total_heap_size - 1]: " << std::hex << (size_t)&MyHeap[total_heap_size - 1] << std::endl;
 	std::cout << "total_heap_size: " << std::dec << (size_t)total_heap_size << std::endl;
 
 }
@@ -231,21 +184,19 @@ void Allocator::print_free_list() {
 	std::cout << " free list->\n" << std::endl;
 	while (node != &end_edge) {
 		std::cout << " start adress of free chunk: " << std::hex << (size_t)node << std::endl;
-		std::cout << " free size of chunk: " << std::dec << (size_t)node->freeSize << std::endl;
+		std::cout << " free chunks: " << std::dec << (size_t)node->free_chunks << std::endl;
 		node = node->next;
 	}
 }
 
 void Allocator::print_heap() {
-	std::cout << "\n***Alligned MyHeap***\n" << std::endl;
-	uint8_t* it = left_alligned_adress;
-	while (it < right_alligned_adress) {
+	std::cout << "\nMyHeap:\n" << std::endl;
+	for(size_t index = 0; index < total_heap_size; index++) {
 		std::cout
-			<< std::dec << " index: " << it - left_alligned_adress
-			<< std::hex << " adr: " << (size_t)it
-			<< std::hex << " val: " << (size_t)*it
+			<< std::dec << " index: " << index
+			<< std::hex << " adr: "   << (size_t) &MyHeap[index]
+			<< std::hex << " val: "   << (size_t) MyHeap[index]
 			<< std::endl;
-		it++;
 	}
 }
 
