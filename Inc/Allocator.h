@@ -6,6 +6,10 @@
 #define ALLOCATOR_MEM_ADRESSING_64_BIT		//win64
 //#define ALLOCATOR_MEM_ADRESSING_32_BIT	//stm32
 
+#if defined(ALLOCATOR_MEM_ADRESSING_64_BIT) && defined(ALLOCATOR_MEM_ADRESSING_32_BIT)
+	#error "Choose only one memory adressing"
+#endif
+
 class Allocator {
 public:
 	struct config {
@@ -21,9 +25,9 @@ public:
 	//16 байт для 64-ех - разрядной адресации памяти (например для win64)
 	//8  байт для 32-ух - разрядной адресации памяти (например для stm32)
 
-#ifdef ALLOCATOR_MEM_ADRESSING_64_BIT
+#if   defined(ALLOCATOR_MEM_ADRESSING_64_BIT)
 	static constexpr size_t CHUNK_INFO_BYTES = 16;
-#elif  ALLOCATOR_MEM_ADRESSING_32_BIT
+#elif defined(ALLOCATOR_MEM_ADRESSING_32_BIT)
 	static constexpr size_t CHUNK_INFO_BYTES = 8;
 #else
 	#error "Choose memory adressing"
