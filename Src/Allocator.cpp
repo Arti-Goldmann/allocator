@@ -1,6 +1,6 @@
 #include "main.h"
 
-uint8_t Allocator::MyHeap[TOTAL_CHUNK_BYTES * config::SIZE_OF_HEAP_CHUNKS];
+uint8_t Allocator::MyHeap[TOTAL_CHUNK_BYTES * config::NUM_OF_CHUNKS_IN_HEAP];
 Allocator::ChunkNodeInfo_t Allocator::start_edge;
 Allocator::ChunkNodeInfo_t Allocator::end_edge;
 
@@ -120,12 +120,12 @@ void Allocator::add_new_free_chunk_to_list(ChunkNodeInfo_t* new_node) {
 
 void Allocator::init() {
 
-	total_heap_size = TOTAL_CHUNK_BYTES * config::SIZE_OF_HEAP_CHUNKS;
+	total_heap_size = TOTAL_CHUNK_BYTES * config::NUM_OF_CHUNKS_IN_HEAP;
 
 	//Создем первый элемент связанного списка, его расположение будет непосредственно в начале MyHeap
 	ChunkNodeInfo_t* first_free_chunk = (ChunkNodeInfo_t*) &MyHeap[0];
 	first_free_chunk->next = &end_edge;
-	first_free_chunk->free_chunks = config::SIZE_OF_HEAP_CHUNKS;
+	first_free_chunk->free_chunks = config::NUM_OF_CHUNKS_IN_HEAP;
 	start_edge.next = first_free_chunk;
 
 	free_chunks = first_free_chunk->free_chunks;

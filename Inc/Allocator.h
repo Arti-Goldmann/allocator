@@ -13,8 +13,8 @@
 class Allocator {
 public:
 	struct config {
-		static constexpr size_t SIZE_OF_HEAP_CHUNKS = 200;  //Сколько блоков в куче
-		static constexpr size_t SIZE_OF_CHUNK_BYTES = 16;   //Размер блока в байтах
+		static constexpr size_t NUM_OF_CHUNKS_IN_HEAP = 200;  //Сколько блоков в куче
+		static constexpr size_t SIZE_OF_CHUNK_BYTES = 16;     //Размер блока в байтах
 	};
 	
 	typedef struct S_ChunkNodeInfo {
@@ -49,7 +49,7 @@ public:
 
 private:
 
-	static uint8_t MyHeap[ TOTAL_CHUNK_BYTES * config::SIZE_OF_HEAP_CHUNKS ];
+	static uint8_t MyHeap[ TOTAL_CHUNK_BYTES * config::NUM_OF_CHUNKS_IN_HEAP ];
 	static ChunkNodeInfo_t start_edge; //Левая граница в MyHeap, за которую мы не должны выходить
 	static ChunkNodeInfo_t end_edge;   //Правая граница в MyHeap, за которую мы не должны выходить
 
